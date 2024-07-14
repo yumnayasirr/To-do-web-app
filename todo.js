@@ -1,79 +1,104 @@
 const inputBox = document.getElementById("input-box");
-const ListContainer = document.getElementById("list-container");
+const listContainer = document.getElementById("list-container");
+
+// Function to add a new task
 function addTask() {
   if (inputBox.value === "") {
     alert("You must write something!");
   } else {
     let li = document.createElement("li");
-    li.innerHTML = inputBox.value;
-    ListContainer.appendChild(li);
+    li.textContent = inputBox.value.trim();
+    
     let span = document.createElement("span");
     span.innerHTML = "\u00d7";
+    span.classList.add("close");
     li.appendChild(span);
-    span.onclick = function () {
+    
+    // Add event listener to delete task when close button (span) is clicked
+    span.addEventListener("click", function () {
       li.remove();
       saveData();
-    };
-    let editBtn = document.createElement("button"); // Create edit button
-    editBtn.innerHTML = "Edit"; // Button text
-    editBtn.classList.add("edit"); // Add class for styling and event handling
-    li.appendChild(editBtn); // Append edit button to li
-    editBtn.onclick = function () {
-      editTask(li); // Passes the li element to the editTask function
-    };
+    });
+    
+    // Create edit button
+    let editBtn = document.createElement("button");
+    editBtn.innerHTML = "Edit";
+    editBtn.classList.add("edit");
+    editBtn.addEventListener("click", function () {
+      editTask(li);
+    });
+    li.appendChild(editBtn);
+    
+    listContainer.appendChild(li);
     inputBox.value = "";
+    
     saveData();
   }
 }
 
-ListContainer.addEventListener(
-  "click",
-  function (e) {
-    if (e.target.tagName === "LI") {
-      // checks if the clicked element is a <li>
-      e.target.classList.toggle("checked"); //toggles 'checked ' class on the clicked '<li>'
-      saveData();
-    } else if (e.target.tagName === "SPAN") {
-      e.target.parentElement.remove(); //removes the li when a span inside it is clicked
-      saveData();
-    }
-  },
-  false
-);
+// Event listener to toggle task completion on click
+listContainer.addEventListener("click", function (e) {
+  if (e.target.tagName === "LI") {
+    e.target.classList.toggle("checked");
+    saveData();
+  } else if (e.target.tagName === "SPAN") {
+    e.target.parentElement.remove();
+    saveData();
+  }
+});
 
+// Function to save tasks to local storage
 function saveData() {
-  localStorage.setItem("data", ListContainer.innerHTML); //to store data in the browser
+  localStorage.setItem("tasks", listContainer.innerHTML);
 }
 
+// Function to display saved tasks from local storage
 function displayData() {
-  ListContainer.innerHTML = localStorage.getItem("data");
+  if (localStorage.getItem("tasks")) {
+    listContainer.innerHTML = localStorage.getItem("tasks");
+    let tasks = listContainer.querySelectorAll("li");
+    tasks.forEach(function(task) {
+      let editBtn = document.createElement("button");
+      editBtn.innerHTML = "Edit";
+      editBtn.classList.add("edit");
+      editBtn.addEventListener("click", function () {
+        editTask(task);
+      });
+      task.appendChild(editBtn);
+    });
+  }
 }
+
+// Display saved tasks when the page loads
 displayData();
 
+// Function to edit a task
 function editTask(liElement) {
   let newText = prompt("Edit your task:", liElement.textContent.trim());
   if (newText !== null && newText.trim() !== "") {
-    liElement.textContent = ""; // Clear existing content
-
+    liElement.textContent = newText.trim();
+    
+    // Create close (delete) button for the edited task
     let span = document.createElement("span");
     span.innerHTML = "\u00d7";
+    span.classList.add("close");
     liElement.appendChild(span);
-    span.onclick = function () {
+    
+    // Add event listener to delete task when close button (span) is clicked
+    span.addEventListener("click", function () {
       liElement.remove();
       saveData();
-    };
-
-    let textNode = document.createTextNode(newText.trim());
-    liElement.appendChild(textNode);
-
+    });
+    
+    // Create edit button for the edited task
     let editBtn = document.createElement("button");
     editBtn.innerHTML = "Edit";
     editBtn.classList.add("edit");
-    editBtn.onclick = function () {
+    editBtn.addEventListener("click", function () {
       editTask(liElement);
-    };
+    });
     liElement.appendChild(editBtn);
-
+    
     saveData();
   }
 }
